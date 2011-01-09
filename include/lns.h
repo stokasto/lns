@@ -23,8 +23,8 @@
 #define INT_BITS (0x3f << NFRAC_BITS)
 
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
-#define CLEAR_BIT(var,pos) ((var) & ~(1<<(pos)))
-#define SET_BIT(var,pos) ((var) | (1<<(pos)))
+#define CLEAR_BIT(var,pos) ((var) &= ~(1<<(pos)))
+#define SET_BIT(var,pos) ((var) |= (1<<(pos)))
 
 // we use 2 bits for flags 1 bit for signing, 6 integer bits and 7 fractional bits
 typedef uint16_t lfloat;

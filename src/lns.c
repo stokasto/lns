@@ -120,7 +120,7 @@ multlf(lfloat x, lfloat y)
 {
     lfloat res = x + y;
     lfloat sign;
-    res = CLEAR_BIT(res, SIGN); // TODO: this should not be necessary
+    CLEAR_BIT(res, SIGN); // TODO: this should not be necessary
     sign = CHECK_BIT(x, SIGN) ^ CHECK_BIT(y, SIGN);
     return res | sign;
 }
@@ -131,7 +131,7 @@ divlf(lfloat x, lfloat y)
 {
     lfloat res = x - y;
     lfloat sign;
-    res = CLEAR_BIT(res, SIGN); // TODO: this should not be necessary
+    CLEAR_BIT(res, SIGN); // TODO: this should not be necessary
     sign = CHECK_BIT(x, SIGN) ^ CHECK_BIT(y, SIGN);
     return res | sign;
 }
@@ -181,6 +181,6 @@ main(void)
     printf("\nTest ops for positive floats:\n");
     printf("Multiplication: %f * %f = %f => 0x%x == 0x%x == %f\n",val, 2., val * 2., float2lfloat(val*2.), multlf(lval, lvalof2), lfloat2float(multlf(lval, lvalof2)));  
     printf("Multiplication: %f * %f = %f => 0x%x == 0x%x == %f\n",val, val2, val * val2, float2lfloat(val*val2), multlf(lval, lval2), lfloat2float(multlf(lval, lval2)));  
-    printf("Division: %f / %f => 0x%x == 0x%x\n",val, 2., float2lfloat(val/2.), divlf(lval, lvalof2));  
+    printf("Division: %f / %f = %f => 0x%x == 0x%x == %f\n",val, 2., val/2., float2lfloat(val/2.), divlf(lval, lvalof2), lfloat2float(divlf(lval, lvalof2)));  
     return 0;
 }
