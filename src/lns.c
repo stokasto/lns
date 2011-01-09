@@ -71,8 +71,8 @@ float2lfloat(float x)
         { // overflow detected 
             //TODO fix this case!
         }
-    res = (ip_nover << (NFRAC_BITS+1)) | ifrac; // append fraction to integral part
-    LOG("ip: %d\n", ip<<(NFRAC_BITS+1));
+    res = (ip_nover << (NFRAC_BITS)) | ifrac; // append fraction to integral part
+    LOG("ip: %d\n", ip<<(NFRAC_BITS));
     // sign if necessary
     if ( sign )
         SET_BIT(res, SIGN);
@@ -92,7 +92,6 @@ lfrac2float(lfloat x)
             {
                 res += pow(2, -1. * (i+1));
             }
-
         }
     return res;
 }
@@ -100,12 +99,10 @@ lfrac2float(lfloat x)
 float
 lfloat2float(lfloat x)
 {
-    printf("converting: ");
-    bitprint(x & (1 << SIGN));
     int sign = CHECK_BIT(x, SIGN) ? -1 : 1;
     int8_t ip = 0.;
     float ifrac = 0.;
-    ip = (x & INT_BITS) >> (NFRAC_BITS+1);
+    ip = (x & INT_BITS) >> (NFRAC_BITS);
     if ( CHECK_BIT(ip, 5) )
         { // negative number
             // set other bits for proper complement
