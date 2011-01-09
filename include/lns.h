@@ -20,7 +20,7 @@
 #define NFRAC_BITS 7
 
 #define FRAC_BITS 0x7f
-#define INT_BITS (0x3f << (NFRAC_BITS+1))
+#define INT_BITS (0x3f << NFRAC_BITS)
 
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define CLEAR_BIT(var,pos) ((var) & ~(1<<(pos)))

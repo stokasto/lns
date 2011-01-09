@@ -11,12 +11,12 @@ float2lfrac(float x)
     float tmp = 0.;
     lfloat res = 0;
     int i;
-    for (i = 0; i <= NFRAC_BITS; ++i)
+    for (i = 1; i <= NFRAC_BITS; ++i)
         {
-            tmp = pow(2, -1. * (i+1));
+            tmp = pow(2, -1. * i);
             LOG("test f2lfrac x: %f - %d %f %f\n",x, i, tmp, x - tmp);
             // NOTE we cap the precision here 
-            if((fabs(x - tmp) < 0.00001 ? 0. : x - tmp) >= 0.) 
+            if((fabs(x - tmp) < 0.0001 ? 0. : x - tmp) >= 0.) 
                 {
                     res |= 1 << (NFRAC_BITS - i);
                     x -= tmp;
@@ -71,8 +71,8 @@ float2lfloat(float x)
         { // overflow detected 
             //TODO fix this case!
         }
-    res = (ip_nover << (NFRAC_BITS+1)) | ifrac; // append fraction to integral part
-    LOG("ip: %d\n", ip<<(NFRAC_BITS+1));
+    res = (ip_nover << NFRAC_BITS) | ifrac; // append fraction to integral part
+    LOG("ip: %d\n", ip<<NFRAC_BITS);
     // sign if necessary
     if ( sign )
         SET_BIT(res, SIGN);
@@ -86,11 +86,11 @@ lfrac2float(lfloat x)
 {
     int i;
     float res = 0;
-    for (i = 0; i <= NFRAC_BITS; ++i)
+    for (i = 1; i <= NFRAC_BITS; ++i)
         {
            if ( CHECK_BIT(x, NFRAC_BITS - i) )
             {
-                res += pow(2, -1. * (i+1));
+                res += pow(2, -1. * i);
             }
 
         }
@@ -100,12 +100,10 @@ lfrac2float(lfloat x)
 float
 lfloat2float(lfloat x)
 {
-    printf("converting: ");
-    bitprint(x & SIGN);
     int sign = CHECK_BIT(x, SIGN) ? -1 : 1;
     int8_t ip = 0.;
     float ifrac = 0.;
-    ip = (x & INT_BITS) >> (NFRAC_BITS+1);
+    ip = (x & INT_BITS) >> NFRAC_BITS;
     if ( CHECK_BIT(ip, 5) )
         { // negative number
             // set other bits for proper complement
@@ -142,7 +140,7 @@ void
 bitprint(lfloat x)
 {
     int i = 16;
-    int shift;
+    //int shift;
     char buf[17];
     while(i)
         {
@@ -168,6 +166,9 @@ main(void)
     printf("float: %f => lfloat: 0x%x\n", val, lval);
     printf("bit print: ");
     bitprint(lval);
+    printf("float: %f => lfloat: 0x%x\n", val2, lval2);
+    printf("bit print: ");
+    bitprint(lval2);
     printf("float: %f => lfloat: 0x%x\n", val3, lval3);
     printf("bit print: ");
     bitprint(lval3);
@@ -178,8 +179,8 @@ main(void)
     printf("lfloat: 0x%x => float: %f == %f\n", lval3, lfloat2float(lval3), val3);
     
     printf("\nTest ops for positive floats:\n");
-    printf("Multiplication: %f * %f => 0x%x == 0x%x\n",val, 2., float2lfloat(val*2.), multlf(lval, lvalof2));  
-    printf("Multiplication: %f * %f => 0x%x == 0x%x\n",val, val2, float2lfloat(val*val2), multlf(lval, lval2));  
+    printf("Multiplication: %f * %f = %f => 0x%x == 0x%x == %f\n",val, 2., val * 2., float2lfloat(val*2.), multlf(lval, lvalof2), lfloat2float(multlf(lval, lvalof2)));  
+    printf("Multiplication: %f * %f = %f => 0x%x == 0x%x == %f\n",val, val2, val * val2, float2lfloat(val*val2), multlf(lval, lval2), lfloat2float(multlf(lval, lval2)));  
     printf("Division: %f / %f => 0x%x == 0x%x\n",val, 2., float2lfloat(val/2.), divlf(lval, lvalof2));  
     return 0;
 }
