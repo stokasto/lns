@@ -15,8 +15,9 @@ float2lfrac(float x)
         {
             tmp = pow(2, -1. * i);
             LOG("test f2lfrac x: %f - %d %f %f\n",x, i, tmp, x - tmp);
-            // NOTE we cap the precision here 
-            if((fabs(x - tmp) < 0.0001 ? 0. : x - tmp) >= 0.) 
+            // NOTE we cap the precision here this is somewhat arbitrary
+            //      TODO: look up some values that make sense!
+            if((fabs(x - tmp) < 0.007 ? 0. : x - tmp) >= 0.) 
                 {
                     res |= 1 << (NFRAC_BITS - i);
                     x -= tmp;
@@ -80,7 +81,7 @@ float2lfloat(float x)
     return res;
 }
 
-/* TODO this is also inefficient */
+/* TODO this might also be inefficient */
 float 
 lfrac2float(lfloat x)
 {
@@ -92,7 +93,6 @@ lfrac2float(lfloat x)
             {
                 res += pow(2, -1. * i);
             }
-
         }
     return res;
 }
