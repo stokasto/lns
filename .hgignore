@@ -1,0 +1,10 @@
+# Allow *. syntax
+syntax:glob
+
+# Generated CMake stuff
+CMakeFiles
+CMakeScripts
+CMakeCache.txt
+*.cmake
+./bin
+./build
