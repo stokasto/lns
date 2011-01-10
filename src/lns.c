@@ -9,20 +9,20 @@ float APPROX_MARGIN = 0.;
 float POW2CACHE[NFRAC_BITS];
 
 float FETCHPOW2(int i) 
-    { 
-        int j; 
-        if (!POW2CACHEINIT) 
-            { 
-                for(j = 0; j < NFRAC_BITS; ++j) 
-                    POW2CACHE[j] = 0.; 
-                POW2CACHEINIT = 1; 
-            } 
-        if (POW2CACHE[i] == 0.) 
-            { 
-                POW2CACHE[i] = pow(2., -1 * (i+1)); 
-            } 
-        return POW2CACHE[i]; 
-    }
+{ 
+    int j; 
+    if (!POW2CACHEINIT) 
+        { 
+            for(j = 0; j < NFRAC_BITS; ++j) 
+                POW2CACHE[j] = 0.; 
+            POW2CACHEINIT = 1; 
+        } 
+    if (POW2CACHE[i] == 0.) 
+        { 
+            POW2CACHE[i] = pow(2., -1 * (i+1)); 
+        } 
+    return POW2CACHE[i]; 
+}
 float FETCHMARGIN()
 {
     if (APPROX_MARGIN == 0. )
@@ -96,7 +96,8 @@ float2lfloat(float x)
     if (ip > ip_nover)
         { // overflow detected 
             //fprintf(stderr, "WARN OVERFLOW\n");
-            //TODO fix this case!
+            //TODO do we need to fix this case?!?
+            //     negative ip numbers might be a problem here
         }
     res = (ip_nover << NFRAC_BITS) | ifrac; // append fraction to integral part
     LOG("ip: %d\n", ip<<NFRAC_BITS);
@@ -278,7 +279,6 @@ void
 bitprint(lfloat x)
 {
     int i = 16;
-    //int shift;
     char buf[17];
     while(i)
         {
