@@ -3,6 +3,33 @@
 #include <stdio.h>
 #include <math.h>
 
+/* for caching often recomputed values */
+int POW2CACHEINIT = 0;
+float APPROX_MARGIN = 0.;
+float POW2CACHE[NFRAC_BITS];
+
+float FETCHPOW2(int i) 
+    { 
+        int j; 
+        if (!POW2CACHEINIT) 
+            { 
+                for(j = 0; j < NFRAC_BITS; ++j) 
+                    POW2CACHE[j] = 0.; 
+                POW2CACHEINIT = 1; 
+            } 
+        if (POW2CACHE[i] == 0.) 
+            { 
+                POW2CACHE[i] = pow(2., -1 * (i+1)); 
+            } 
+        return POW2CACHE[i]; 
+    }
+float FETCHMARGIN()
+{
+    if (APPROX_MARGIN == 0. )
+        APPROX_MARGIN = pow(2., -NFRAC_BITS);
+    return APPROX_MARGIN;
+}
+
 /*TODO: this function is bloody inefficient :) --> pow etc. */
 lfloat
 float2lfrac(float x)
@@ -12,10 +39,10 @@ float2lfrac(float x)
     int i;
     for (i = 1; i <= NFRAC_BITS; ++i)
         {
-            tmp = pow(2., -1. * i);
+            tmp = FETCHPOW2(i-1);
             LOG("test f2lfrac x: %f - %d %f %f\n",x, i, tmp, x - tmp);
             // NOTE we cap the precision here  using 2^(frac bits)
-            if((fabs(x - tmp) < pow(2,-NFRAC_BITS) ? 0. : x - tmp) >= 0.) 
+            if((fabs(x - tmp) < FETCHMARGIN() ? 0. : x - tmp) >= 0.) 
                 {
                     res |= 1 << (NFRAC_BITS - i);
                     x -= tmp;
@@ -89,7 +116,7 @@ lfrac2float(lfloat x)
         {
            if ( CHECK_BIT(x, NFRAC_BITS - i) )
             {
-                res += pow(2, -1. * i);
+                res += FETCHPOW2(i-1);
             }
         }
     return res;
