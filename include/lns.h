@@ -6,13 +6,12 @@
 // simple logging
 #define LOGGING 0
 #if LOGGING 
+#include <stdio.h>
 #define LOG printf
 #else
 #define LOG(X,...) 
 #endif
 
-
-#define SIGN 13
 
 #define NFLAG_BITS 2
 #define NSIGN_BITS 1
@@ -22,32 +21,47 @@
 #define FRAC_BITS 0x7f
 #define INT_BITS (0x3f << NFRAC_BITS)
 
+#define SIGN 13
+#define INT_SIGN (5 + NFRAC_BITS) // NOTE = (6 + NFRAC_BITS - 1)
+
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define CLEAR_BIT(var,pos) ((var) &= ~(1<<(pos)))
 #define SET_BIT(var,pos) ((var) |= (1<<(pos)))
 
 // we use 2 bits for flags 1 bit for signing, 6 integer bits and 7 fractional bits
+// this gives a total of 16 bits
 typedef uint16_t lfloat;
 
-// for conversion
-lfloat
+// helpers
+static lfloat
 float2lfloat(float x);
-lfloat
+static lfloat
 float2lfrac(float x);
+// for convenience printing
+void
+bitprint(lfloat x);
 
+// conversion functions
 float
 lfloat2float(lfloat x);
 float
 lfrac2float(lfloat x);
 
-// for calculing with logarithmic floats
+// comparison operators
+int 
+ltlf(lfloat x, lfloat y);
+int 
+gtlf(lfloat x, lfloat y);
+// operators for calculating with logarithmic floats
 lfloat
 multlf(lfloat x, lfloat y);
 lfloat
 divlf(lfloat x, lfloat y);
-
-// for convenience printing
-void
-bitprint(lfloat x);
+lfloat
+sqrlf(lfloat x);
+lfloat
+sqrtlf(lfloat x);
+lfloat
+log2lf(lfloat x);
 
 #endif

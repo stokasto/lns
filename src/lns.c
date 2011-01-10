@@ -2,7 +2,6 @@
 
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 
 /*TODO: this function is bloody inefficient :) --> pow etc. */
 lfloat
@@ -13,7 +12,7 @@ float2lfrac(float x)
     int i;
     for (i = 1; i <= NFRAC_BITS; ++i)
         {
-            tmp = pow(2, -1. * i);
+            tmp = pow(2., -1. * i);
             LOG("test f2lfrac x: %f - %d %f %f\n",x, i, tmp, x - tmp);
             // NOTE we cap the precision here this is somewhat arbitrary
             //      TODO: look up some values that make sense!
@@ -43,13 +42,13 @@ float2lfloat(float x)
     while (x < 1) 
         {
             ip -= 1;
-            x   *= 2;
+            x  *= 2;
         }
     
     while (x >= 2) 
         {
             ip += 1;
-            x   /= 2;
+            x  /= 2;
         }
     
     while (fp >= tol) 
@@ -115,6 +114,7 @@ lfloat2float(lfloat x)
 }
 
 
+/* lossless operations */
 lfloat
 multlf(lfloat x, lfloat y)
 {
@@ -134,6 +134,92 @@ divlf(lfloat x, lfloat y)
     CLEAR_BIT(res, SIGN); // TODO: this should not be necessary
     sign = CHECK_BIT(x, SIGN) ^ CHECK_BIT(y, SIGN);
     return res | sign;
+}
+
+lfloat
+sqrlf(lfloat x)
+{
+    lfloat res = x << 1;
+    CLEAR_BIT(res, SIGN); 
+    // TODO: beware of overflows
+    return res;
+}
+
+lfloat
+sqrtlf(lfloat x)
+{
+    // TODO: check sign before op 
+    lfloat res = x >> 1;
+    CLEAR_BIT(res, SIGN); 
+    return res;
+}
+
+#define SAFE_CHECK(X,Y,OP,DEF) \
+                { \
+                    if(CHECK_BIT(X, INT_SIGN)) \
+                       { \
+                            if(CHECK_BIT(Y, INT_SIGN)) \
+                                return X OP Y; \
+                            else \
+                                return DEF; \
+                        } \
+                    if(CHECK_BIT(Y, INT_SIGN)) \
+                        return 1-DEF; \
+                    return X OP Y; \
+                }
+int 
+gtlf(lfloat x, lfloat y)
+{
+    // TODO: check sign and flags before op 
+    if (CHECK_BIT(x, SIGN))
+        { // negative number found --> special comparison
+          // as we store numbers in 2ary complement
+            if(CHECK_BIT(y, SIGN))
+                { // y < 0 --> invert comparison
+                    SAFE_CHECK(x,y,<,1);
+                }
+            // y > 0 --> trivial case
+            return 0;
+        }
+    if(CHECK_BIT(y, SIGN))
+        { // y < 0 --> trivial case 
+            return 1;
+        }
+    SAFE_CHECK(x,y,>,0);
+}
+
+
+int 
+ltlf(lfloat x, lfloat y)
+{
+    // TODO: check sign and flags before op 
+    if (CHECK_BIT(x, SIGN))
+        { // negative number found --> special comparison
+          // as we store numbers in 2ary complement
+            if(CHECK_BIT(y, SIGN))
+                { // y < 0 --> invert comparison
+                    SAFE_CHECK(x,y,>,0);
+                }
+            // y > 0 --> trivial case
+            return 1;
+        }
+    if(CHECK_BIT(y, SIGN))
+        { // y < 0 --> trivial case 
+            return 0;
+        }
+    SAFE_CHECK(x,y,<,1);
+}
+
+/* imprecise operations */
+
+lfloat
+log2lf(lfloat x)
+{
+    // TODO: check sign bit
+    // calculate the exponent 
+    float tmp = ((int8_t) ((x & INT_BITS) >> NFRAC_BITS)) + lfrac2float(x & FRAC_BITS);
+    // re-encode as log val -> IMPRECISE OP
+    return float2lfloat(tmp);
 }
 
 void
@@ -158,10 +244,12 @@ main(void)
     float val = 2.37841;
     float val2 = 4.5;
     float val3 = 0.35355;
+    float valbig = 7304.2386;
     lfloat lval = float2lfloat(val);
     lfloat lval2 = float2lfloat(val2);
     lfloat lval3 = float2lfloat(val3);
     lfloat lvalof2 = float2lfloat(2.);
+    lfloat lvalbig = float2lfloat(valbig);
     printf("Test conversion from float to lfloat:\n");
     printf("float: %f => lfloat: 0x%x\n", val, lval);
     printf("bit print: ");
@@ -172,15 +260,28 @@ main(void)
     printf("float: %f => lfloat: 0x%x\n", val3, lval3);
     printf("bit print: ");
     bitprint(lval3);
+    printf("float: %f => lfloat: 0x%x\n", valbig, lvalbig);
+    printf("bit print: ");
+    bitprint(lvalbig);
     
     printf("\nTest conversion from lfloat to float:\n");
     printf("lfloat: 0x%x => float: %f == %f\n", lval, lfloat2float(lval), val);
     printf("lfloat: 0x%x => float: %f == %f\n", lval2, lfloat2float(lval2), val2);
     printf("lfloat: 0x%x => float: %f == %f\n", lval3, lfloat2float(lval3), val3);
+    printf("lfloat: 0x%x => float: %f == %f\n", lvalbig, lfloat2float(lvalbig), valbig);
     
     printf("\nTest ops for positive floats:\n");
     printf("Multiplication: %f * %f = %f => 0x%x == 0x%x == %f\n",val, 2., val * 2., float2lfloat(val*2.), multlf(lval, lvalof2), lfloat2float(multlf(lval, lvalof2)));  
     printf("Multiplication: %f * %f = %f => 0x%x == 0x%x == %f\n",val, val2, val * val2, float2lfloat(val*val2), multlf(lval, lval2), lfloat2float(multlf(lval, lval2)));  
     printf("Division: %f / %f = %f => 0x%x == 0x%x == %f\n",val, 2., val/2., float2lfloat(val/2.), divlf(lval, lvalof2), lfloat2float(divlf(lval, lvalof2)));  
+    printf("Power: %f ^ 2 = %f => 0x%x == 0x%x == %f\n",val, val*val, float2lfloat(val*val), sqrlf(lval), lfloat2float(sqrlf(lval)));  
+    printf("Power: %f ^ 2 = %f => 0x%x == 0x%x == %f\n",valbig, valbig*valbig, float2lfloat(valbig*valbig), sqrlf(lvalbig), lfloat2float(sqrlf(lvalbig)));  
+    printf("SQRT: sqrt(%f) = %f => 0x%x == 0x%x == %f\n",val, sqrt(val), float2lfloat(sqrt(val)), sqrtlf(lval), lfloat2float(sqrtlf(lval)));  
+    printf("log2: log2(%f) = %f => 0x%x == 0x%x == %f\n",val, log2(val), float2lfloat(log2(val)), log2lf(lval), lfloat2float(log2lf(lval)));  
+    printf("<: %f < %f = %d == %d\n", val, val2, val < val2, ltlf(lval, lval2));
+    printf("<: %f < %f = %d == %d\n", val3, val2, val3 < val2, ltlf(lval3, lval2));
+    printf(">: %f < %f = %d == %d\n", val, val2, val > val2, gtlf(lval, lval2));
+    printf(">: %f < %f = %d == %d\n", val3, val2, val3 > val2, gtlf(lval3, lval2));
+    printf(">: %f > %f = %d == %d\n", val2, val3, val2 > val3, gtlf(lval2, lval3));
     return 0;
 }

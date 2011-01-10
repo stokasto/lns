@@ -30,3 +30,5 @@ sub lg {
  
 printf "x = %g\nlg(x) = %g\n", 4.5, lg(4.5);
 printf "x = %g\nlg(x) = %g\n", 0.35335, lg(0.35335);
+printf "x = %g\nlg(x) = %g\n", 7304.2386, lg(7304.2386);
+
