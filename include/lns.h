@@ -24,6 +24,10 @@
 #define SIGN 13
 #define INT_SIGN (5 + NFRAC_BITS) // NOTE = (6 + NFRAC_BITS - 1)
 
+#define LFINF (0x1 << (NFRAC_BITS + NINT_BITS + NSIGN_BITS))
+#define LFZERO (0x0 << (NFRAC_BITS + NINT_BITS + NSIGN_BITS))
+#define LFNAN (0x0 << (NFRAC_BITS + NINT_BITS + NSIGN_BITS))
+
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define CLEAR_BIT(var,pos) ((var) &= ~(1<<(pos)))
 #define SET_BIT(var,pos) ((var) |= (1<<(pos)))
@@ -32,9 +36,28 @@
 // this gives a total of 16 bits
 typedef uint16_t lfloat;
 
+// flag check operations
+int
+lf_isinf(lfloat x)
+{
+    return x & LFINF;
+}
+int
+lf_iszero(lfloat x)
+{
+    return x & LFZERO;
+}
+int
+lf_isnan(lfloat x)
+{
+    return x & LFNAN;
+}
+
 // helpers
 static lfloat
 float2lfloat(float x);
+float
+lfloat2exp(lfloat x);
 static lfloat
 float2lfrac(float x);
 // for convenience printing
@@ -63,5 +86,9 @@ lfloat
 sqrtlf(lfloat x);
 lfloat
 log2lf(lfloat x);
+lfloat
+addlf(lfloat x, lfloat y);
+lfloat
+sublf(lfloat x, lfloat y);
 
 #endif

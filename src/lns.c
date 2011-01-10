@@ -95,6 +95,7 @@ float2lfloat(float x)
     ip_nover = (ip & 0x3f);
     if (ip > ip_nover)
         { // overflow detected 
+            //fprintf(stderr, "WARN OVERFLOW\n");
             //TODO fix this case!
         }
     res = (ip_nover << NFRAC_BITS) | ifrac; // append fraction to integral part
@@ -123,9 +124,8 @@ lfrac2float(lfloat x)
 }
 
 float
-lfloat2float(lfloat x)
+lfloat2exp(lfloat x)
 {
-    int sign = CHECK_BIT(x, SIGN) ? -1 : 1;
     int8_t ip = 0.;
     float ifrac = 0.;
     ip = (x & INT_BITS) >> NFRAC_BITS;
@@ -136,9 +136,16 @@ lfloat2float(lfloat x)
             LOG("ip: %d\n", ip);
         }
     ifrac = lfrac2float(x & FRAC_BITS);
-    return sign * pow(2., ip + ifrac);
+    return ip + ifrac;
 }
 
+
+float
+lfloat2float(lfloat x)
+{
+    int sign = CHECK_BIT(x, SIGN) ? -1 : 1;
+    return sign * pow(2., lfloat2exp(x));
+}
 
 /* lossless operations */
 lfloat
@@ -248,6 +255,25 @@ log2lf(lfloat x)
     return float2lfloat(tmp);
 }
 
+/* WARNING: addlf and sublf are not very efficient */
+lfloat
+addlf(lfloat x, lfloat y)
+{
+    lfloat res =  x + float2lfloat(1. + pow(2., lfloat2exp(y) - lfloat2exp(x)));
+    if (CHECK_BIT(x, SIGN))
+        SET_BIT(res, SIGN);
+    return res;
+}
+
+lfloat
+sublf(lfloat x, lfloat y)
+{
+    lfloat res =  x + float2lfloat(1. - pow(2., lfloat2exp(y) - lfloat2exp(x)));
+    if (CHECK_BIT(x, SIGN))
+        SET_BIT(res, SIGN);
+    return res;
+}
+
 void
 bitprint(lfloat x)
 {
@@ -271,6 +297,7 @@ main(void)
     float val2 = 4.5;
     float val3 = 0.35355;
     float valbig = 7304.2386;
+    //float valbig = 7304.2*1000;
     lfloat lval = float2lfloat(val);
     lfloat lval2 = float2lfloat(val2);
     lfloat lval3 = float2lfloat(val3);
@@ -304,6 +331,8 @@ main(void)
     printf("Power: %f ^ 2 = %f => 0x%x == 0x%x == %f\n",valbig, valbig*valbig, float2lfloat(valbig*valbig), sqrlf(lvalbig), lfloat2float(sqrlf(lvalbig)));  
     printf("SQRT: sqrt(%f) = %f => 0x%x == 0x%x == %f\n",val, sqrt(val), float2lfloat(sqrt(val)), sqrtlf(lval), lfloat2float(sqrtlf(lval)));  
     printf("log2: log2(%f) = %f => 0x%x == 0x%x == %f\n",val, log2(val), float2lfloat(log2(val)), log2lf(lval), lfloat2float(log2lf(lval)));  
+    printf("Addition: %f + %f = %f => 0x%x == 0x%x == %f\n",val, 2., val + 2., float2lfloat(val+2.), addlf(lval, lvalof2), lfloat2float(addlf(lval, lvalof2)));  
+    printf("Subtraction: %f - %f = %f => 0x%x == 0x%x == %f\n",val, 2., val - 2., float2lfloat(val-2.), sublf(lval, lvalof2), lfloat2float(sublf(lval, lvalof2)));  
     printf("<: %f < %f = %d == %d\n", val, val2, val < val2, ltlf(lval, lval2));
     printf("<: %f < %f = %d == %d\n", val3, val2, val3 < val2, ltlf(lval3, lval2));
     printf(">: %f < %f = %d == %d\n", val, val2, val > val2, gtlf(lval, lval2));
