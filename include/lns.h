@@ -12,22 +12,26 @@
 #define LOG(X,...) 
 #endif
 
-
+// bit counts
 #define NFLAG_BITS 2
 #define NSIGN_BITS 1
 #define NINT_BITS 6
 #define NFRAC_BITS 7
 
+// bit masks
 #define FRAC_BITS 0x7f
 #define INT_BITS (0x3f << NFRAC_BITS)
 
+// special bit positions
 #define SIGN 13
 #define INT_SIGN (5 + NFRAC_BITS) // NOTE = (6 + NFRAC_BITS - 1)
 
+// special lfloat values
 #define LFINF (0x1 << (NFRAC_BITS + NINT_BITS + NSIGN_BITS))
 #define LFZERO (0x0 << (NFRAC_BITS + NINT_BITS + NSIGN_BITS))
 #define LFNAN (0x0 << (NFRAC_BITS + NINT_BITS + NSIGN_BITS))
 
+// helpers for bit arithmetic
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define CLEAR_BIT(var,pos) ((var) &= ~(1<<(pos)))
 #define SET_BIT(var,pos) ((var) |= (1<<(pos)))
